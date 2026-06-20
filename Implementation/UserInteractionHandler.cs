@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using Terraria;
-using Terraria.ID;
 using TShockAPI;
 using TShockAPI.DB;
 
@@ -16,7 +13,6 @@ namespace HouseRegions
 {
     public class UserInteractionHandler : IDisposable
     {
-        #region Nested: CommandExecDummyPlayer
         private class CommandExecDummyPlayer : TSPlayer
         {
             private readonly Action<string, Color> _sendMessageHandler;
@@ -37,7 +33,6 @@ namespace HouseRegions
                 _sendMessageHandler?.Invoke(msg, color);
             }
         }
-        #endregion
 
         private readonly PluginTrace _trace;
         private Configuration _config;
@@ -59,7 +54,6 @@ namespace HouseRegions
             Commands.ChatCommands.Add(new Command(null, HandleHouseCommand, "house", "housing"));
         }
 
-        #region Command Handling /house
         private void HandleHouseCommand(CommandArgs args)
         {
             if (args == null || IsDisposed)
@@ -264,9 +258,7 @@ namespace HouseRegions
 
             return false;
         }
-        #endregion
 
-        #region Command Handling /house summary
         private void HouseSummaryCommand_Exec(CommandArgs args)
         {
             if (args == null || IsDisposed)
@@ -309,8 +301,8 @@ namespace HouseRegions
             PaginationTools.SendPage(
                 args.Player, pageNumber, PaginationTools.BuildLinesFromTerms(ownerHousesTermSelector), new PaginationTools.Settings
                 {
-                    HeaderFormat = string.Format("House Owners ({{0}}/{{1}}):"),
-                    FooterFormat = string.Format("Type /house summary {{0}} for more."),
+                    HeaderFormat = string.Format("House Owners ({0}/{1}):"),
+                    FooterFormat = string.Format("Type /house summary {0} for more."),
                     NothingToDisplayString = "There are no house regions in this world."
                 }
             );
@@ -329,9 +321,7 @@ namespace HouseRegions
             args.Player.SendMessage("/house summary [page]", Color.White);
             args.Player.SendMessage("Displays all house owners and the amount of house regions they own.", Color.LightGray);
         }
-        #endregion
 
-        #region Command Handling /house info
         private void HouseInfoCommand_Exec(CommandArgs args)
         {
             if (args == null || IsDisposed)
@@ -395,8 +385,8 @@ namespace HouseRegions
             PaginationTools.SendPage(
                 args.Player, pageNumber, lines, new PaginationTools.Settings
                 {
-                    HeaderFormat = string.Format("Information About This House ({{0}}/{{1}}):"),
-                    FooterFormat = string.Format("Type /house info {{0}} for more information.")
+                    HeaderFormat = string.Format("Information About This House ({0}/{1}):"),
+                    FooterFormat = string.Format("Type /house info {0} for more information.")
                 }
             );
 
@@ -417,9 +407,7 @@ namespace HouseRegions
             args.Player.SendMessage("Displays several information about the house at your current positon.", Color.LightGray);
             args.Player.SendMessage("Will also display the boundaries of the house by wires.", Color.LightGray);
         }
-        #endregion
 
-        #region Command Handling /house scan
         private void HouseScanCommand_Exec(CommandArgs args)
         {
             if (args == null || IsDisposed)
@@ -480,9 +468,7 @@ namespace HouseRegions
             args.Player.SendMessage("Displays all house region boundaries close to your character's position", Color.LightGray);
             args.Player.SendMessage("as wires.", Color.LightGray);
         }
-        #endregion
 
-        #region Command Handling /house define
         private void HouseDefineCommand_Exec(CommandArgs args)
         {
             if (args == null || IsDisposed)
@@ -517,8 +503,7 @@ namespace HouseRegions
             CommandInteraction interaction = StartOrResetCommandInteraction(args.Player, 60000);
             interaction.TileEditCallback = (playerLocal, editType, tileType, tileLocation, style) =>
             {
-                // Revoke Mark 1 or 2
-                if (editType == 11 || editType == 6 || editType == 13 || editType == 17) // KillWire, KillWire2, KillWire3, KillWire4
+                if (editType == 11 || editType == 6 || editType == 13 || editType == 17)
                 {
                     if (tileLocation == point1)
                     {
@@ -559,7 +544,6 @@ namespace HouseRegions
                     return new CommandInteractionResult { IsHandled = true, IsInteractionCompleted = false };
                 }
 
-                // Mark 1 / 2
                 if (point1 == Point.Zero || point2 == Point.Zero)
                 {
                     if (point1 == Point.Zero)
@@ -606,7 +590,6 @@ namespace HouseRegions
                 }
                 else
                 {
-                    // Final Mark
                     playerLocal.SendTileSquare(point1.X, point1.Y, 1);
                     playerLocal.SendTileSquare(point2.X, point2.Y, 1);
                     SendAreaDottedFakeWires(playerLocal, houseArea, false);
@@ -702,9 +685,7 @@ namespace HouseRegions
                     break;
             }
         }
-        #endregion
 
-        #region Command Handling /house resize
         private void HouseResizeCommand_Exec(CommandArgs args)
         {
             if (args == null || IsDisposed)
@@ -736,10 +717,6 @@ namespace HouseRegions
 
             Rectangle newArea = region!.Area;
             List<int> directions = new List<int>();
-            //0 = up
-            //1 = right
-            //2 = down
-            //3 = left
             for (int i = 1; i < args.Parameters.Count - 1; i++)
             {
                 switch (args.Parameters[i].ToLowerInvariant())
@@ -815,7 +792,6 @@ namespace HouseRegions
 
         private bool ResizeRegion(string regionName, int amount, int direction)
         {
-            // Try reflection first in case TShock still has this method
             try
             {
                 var method = typeof(RegionManager).GetMethod("ResizeRegion");
@@ -826,7 +802,6 @@ namespace HouseRegions
             }
             catch { }
 
-            // Fallback: update DB directly
             var region = TShock.Regions.GetRegionByName(regionName);
             if (region == null) return false;
 
@@ -876,9 +851,7 @@ namespace HouseRegions
                     break;
             }
         }
-        #endregion
 
-        #region Command Handling /house delete
         private void HouseDeleteCommand_Exec(CommandArgs args)
         {
             if (args == null || IsDisposed)
@@ -926,9 +899,7 @@ namespace HouseRegions
             args.Player.SendMessage("NOTE: You have to own a house in order to remove it, just having", Color.IndianRed);
             args.Player.SendMessage("build access is not sufficient.", Color.IndianRed);
         }
-        #endregion
 
-        #region Command Handling /house setowner
         private void HouseSetOwnerCommand_Exec(CommandArgs args)
         {
             if (args == null || IsDisposed)
@@ -1009,9 +980,7 @@ namespace HouseRegions
             args.Player.SendMessage("NOTE: You have to own a house in order to change its owner, just having", Color.IndianRed);
             args.Player.SendMessage("build access is not sufficient.", Color.IndianRed);
         }
-        #endregion
 
-        #region Command Handling /house share
         private void HouseShareCommand_Exec(CommandArgs args)
         {
             if (args == null || IsDisposed)
@@ -1064,9 +1033,7 @@ namespace HouseRegions
             args.Player.SendMessage("NOTE: You have to own a house in order to share it, just having", Color.IndianRed);
             args.Player.SendMessage("build access is not sufficient.", Color.IndianRed);
         }
-        #endregion
 
-        #region Command Handling /house unshare
         private void HouseUnshareCommand_Exec(CommandArgs args)
         {
             if (args == null || IsDisposed)
@@ -1119,9 +1086,7 @@ namespace HouseRegions
             args.Player.SendMessage("NOTE: You have to own a house in order to alter shares of it,", Color.IndianRed);
             args.Player.SendMessage("just having build access is not sufficient.", Color.IndianRed);
         }
-        #endregion
 
-        #region Command Handling /house sharegroup
         private void HouseShareGroupCommand_Exec(CommandArgs args)
         {
             if (args == null || IsDisposed)
@@ -1177,9 +1142,7 @@ namespace HouseRegions
             args.Player.SendMessage("NOTE: You have to own a house in order to share it, just having", Color.IndianRed);
             args.Player.SendMessage("build access is not sufficient.", Color.IndianRed);
         }
-        #endregion
 
-        #region Command Handling /house unsharegroup
         private void HouseUnshareGroupCommand_Exec(CommandArgs args)
         {
             if (args == null || IsDisposed)
@@ -1235,7 +1198,6 @@ namespace HouseRegions
             args.Player.SendMessage("NOTE: You have to own a house in order to alter shares of it,", Color.IndianRed);
             args.Player.SendMessage("just having build access is not sufficient.", Color.IndianRed);
         }
-        #endregion
 
         public bool TryGetHouseRegionAtPlayer(TSPlayer player, out string? owner, out Region? region)
         {
@@ -1349,7 +1311,6 @@ namespace HouseRegions
             }
         }
 
-        #region Interaction System
         public bool HandleTileEdit(TSPlayer player, byte editType, byte tileType, Point location, short style)
         {
             if (!_activeInteractions.TryGetValue(player.Index, out var interaction))
@@ -1415,9 +1376,7 @@ namespace HouseRegions
             public bool IsHandled { get; set; }
             public bool IsInteractionCompleted { get; set; }
         }
-        #endregion
 
-        #region IDisposable
         private bool _isDisposed;
         public bool IsDisposed => _isDisposed;
 
@@ -1430,10 +1389,8 @@ namespace HouseRegions
                 interaction.AbortedCallback?.Invoke(interaction.Player);
             _activeInteractions.Clear();
         }
-        #endregion
     }
 
-    #region Extension Helpers
     public static class PointExtensions
     {
         public static Point OffsetEx(this Point point, int offsetX, int offsetY) =>
@@ -1455,10 +1412,10 @@ namespace HouseRegions
             account = TShock.UserAccounts.GetUserAccountByName(search);
             if (account == null)
             {
-                player.SendErrorMessage($\"No user found matching \\\"{search}\\\".\");\n                return false;
+                player.SendErrorMessage($"No user found matching \"{search}\".");
+                return false;
             }
             return true;
         }
     }
-    #endregion
 }
