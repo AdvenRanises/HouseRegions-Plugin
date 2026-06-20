@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.Xna.Framework;
@@ -51,7 +49,7 @@ namespace HouseRegions
             _housingManager = housingManager ?? throw new ArgumentNullException(nameof(housingManager));
             _reloadConfigurationCallback = reloadConfigurationCallback ?? throw new ArgumentNullException(nameof(reloadConfigurationCallback));
 
-            Commands.ChatCommands.Add(new Command(null, HandleHouseCommand, "house", "housing"));
+            Commands.ChatCommands.Add(new Command((string)null!, HandleHouseCommand, "house", "housing"));
         }
 
         private void HandleHouseCommand(CommandArgs args)
@@ -501,9 +499,9 @@ namespace HouseRegions
             args.Player.SendMessage("or by altering the tile otherwise.", Color.MediumSpringGreen);
 
             CommandInteraction interaction = StartOrResetCommandInteraction(args.Player, 60000);
-            interaction.TileEditCallback = (playerLocal, editType, tileType, tileLocation, style) =>
+            interaction.TileEditCallback = (playerLocal, editAction, tileType, tileLocation, style) =>
             {
-                if (editType == 11 || editType == 6 || editType == 13 || editType == 17)
+                if (editAction == 11 || editAction == 6 || editAction == 13 || editAction == 17)
                 {
                     if (tileLocation == point1)
                     {
@@ -512,7 +510,7 @@ namespace HouseRegions
                         if (houseArea != Rectangle.Empty)
                             SendAreaDottedFakeWires(playerLocal, houseArea, false);
 
-                        playerLocal.SendTileSquare(tileLocation.X, tileLocation.Y, 1);
+                        playerLocal.SendTileSquareCentered(tileLocation.X, tileLocation.Y, 1);
 
                         if (point2 != Point.Zero)
                             SendFakeWireCross(playerLocal, point2);
@@ -530,7 +528,7 @@ namespace HouseRegions
                         if (houseArea != Rectangle.Empty)
                             SendAreaDottedFakeWires(playerLocal, houseArea, false);
 
-                        playerLocal.SendTileSquare(tileLocation.X, tileLocation.Y, 1);
+                        playerLocal.SendTileSquareCentered(tileLocation.X, tileLocation.Y, 1);
 
                         if (point1 != Point.Zero)
                             SendFakeWireCross(playerLocal, point1);
@@ -551,7 +549,7 @@ namespace HouseRegions
                     else
                         point2 = tileLocation;
 
-                    playerLocal.SendTileSquare(tileLocation.X, tileLocation.Y, 1);
+                    playerLocal.SendTileSquareCentered(tileLocation.X, tileLocation.Y, 1);
                     SendFakeWireCross(playerLocal, tileLocation);
 
                     if (point1 != Point.Zero && point2 != Point.Zero)
@@ -590,10 +588,10 @@ namespace HouseRegions
                 }
                 else
                 {
-                    playerLocal.SendTileSquare(point1.X, point1.Y, 1);
-                    playerLocal.SendTileSquare(point2.X, point2.Y, 1);
+                    playerLocal.SendTileSquareCentered(point1.X, point1.Y, 1);
+                    playerLocal.SendTileSquareCentered(point2.X, point2.Y, 1);
                     SendAreaDottedFakeWires(playerLocal, houseArea, false);
-                    playerLocal.SendTileSquare(tileLocation.X, tileLocation.Y, 1);
+                    playerLocal.SendTileSquareCentered(tileLocation.X, tileLocation.Y, 1);
 
                     if (
                         tileLocation.X >= houseArea.Left && tileLocation.X <= houseArea.Right &&
@@ -652,9 +650,9 @@ namespace HouseRegions
             interaction.AbortedCallback = (playerLocal) =>
             {
                 if (point1 != Point.Zero)
-                    playerLocal.SendTileSquare(point1.X, point1.Y, 1);
+                    playerLocal.SendTileSquareCentered(point1.X, point1.Y, 1);
                 if (point2 != Point.Zero)
-                    playerLocal.SendTileSquare(point2.X, point2.Y, 1);
+                    playerLocal.SendTileSquareCentered(point2.X, point2.Y, 1);
                 if (houseArea != Rectangle.Empty)
                     SendAreaDottedFakeWires(playerLocal, houseArea, false);
             };
@@ -1242,7 +1240,7 @@ namespace HouseRegions
                 return;
 
             tile.WireBlue = true;
-            player.SendTileSquare(tileLocation.X, tileLocation.Y, 1);
+            player.SendTileSquareCentered(tileLocation.X, tileLocation.Y, 1);
             tile.WireBlue = false;
         }
 
@@ -1267,7 +1265,7 @@ namespace HouseRegions
                     if (setOrUnset)
                         SendFakeTileWire(player, boundaryPoint);
                     else
-                        player.SendTileSquare(boundaryPoint.X, boundaryPoint.Y, 1);
+                        player.SendTileSquareCentered(boundaryPoint.X, boundaryPoint.Y, 1);
         }
 
         private static IEnumerable<Point> EnumerateRegionBoundaries(Rectangle area)
@@ -1311,7 +1309,7 @@ namespace HouseRegions
             }
         }
 
-        public bool HandleTileEdit(TSPlayer player, byte editType, byte tileType, Point location, short style)
+        public bool HandleTileEdit(TSPlayer player, byte editAction, ushort tileType, Point location, short style)
         {
             if (!_activeInteractions.TryGetValue(player.Index, out var interaction))
                 return false;
@@ -1323,7 +1321,7 @@ namespace HouseRegions
                 return false;
             }
 
-            var result = interaction.TileEditCallback?.Invoke(player, editType, tileType, location, style);
+            var result = interaction.TileEditCallback?.Invoke(player, editAction, tileType, location, style);
             if (result?.IsHandled == true)
             {
                 if (result.IsInteractionCompleted)
@@ -1357,7 +1355,7 @@ namespace HouseRegions
             public DateTime StartTime { get; private set; }
             public TimeSpan Timeout { get; }
 
-            public Func<TSPlayer, byte, byte, Point, short, CommandInteractionResult>? TileEditCallback { get; set; }
+            public Func<TSPlayer, byte, ushort, Point, short, CommandInteractionResult>? TileEditCallback { get; set; }
             public Action<TSPlayer>? TimeExpiredCallback { get; set; }
             public Action<TSPlayer>? AbortedCallback { get; set; }
 
