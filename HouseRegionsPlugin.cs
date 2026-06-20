@@ -25,6 +25,7 @@ namespace HouseRegions
         public static string ConfigFilePath => Path.Combine(DataDirectory, "Config.xml");
 
         private bool _hooksEnabled;
+        private bool _isDisposed;
         internal PluginTrace Trace { get; }
         public Configuration Config { get; private set; } = null!;
         public HousingManager HousingManager { get; private set; } = null!;
@@ -89,7 +90,7 @@ namespace HouseRegions
 
         private Configuration? ReloadConfiguration()
         {
-            if (IsDisposed)
+            if (_isDisposed)
                 return null;
 
             Config = Configuration.Read(ConfigFilePath);
@@ -100,15 +101,15 @@ namespace HouseRegions
 
         private void OnTileEdit(object? sender, GetDataHandlers.TileEditEventArgs e)
         {
-            if (IsDisposed || !_hooksEnabled || e.Handled || _userInteractionHandler == null)
+            if (_isDisposed || !_hooksEnabled || e.Handled || _userInteractionHandler == null)
                 return;
 
-            e.Handled = _userInteractionHandler.HandleTileEdit(e.Player, e.EditType, e.Type, new Point(e.X, e.Y), e.Style);
+            e.Handled = _userInteractionHandler.HandleTileEdit(e.Player, e.Action, e.TileType, new Point(e.X, e.Y), e.Style);
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (IsDisposed)
+            if (_isDisposed)
                 return;
 
             if (disposing)
@@ -119,6 +120,7 @@ namespace HouseRegions
             }
 
             base.Dispose(disposing);
+            _isDisposed = true;
         }
     }
 }
