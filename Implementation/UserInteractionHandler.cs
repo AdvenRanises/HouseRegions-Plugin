@@ -499,9 +499,9 @@ namespace HouseRegions
             args.Player.SendMessage("or by altering the tile otherwise.", Color.MediumSpringGreen);
 
             CommandInteraction interaction = StartOrResetCommandInteraction(args.Player, 60000);
-            interaction.TileEditCallback = (playerLocal, editAction, tileType, tileLocation, style) =>
+            interaction.TileEditCallback = (playerLocal, editAction, editData, tileLocation, style) =>
             {
-                if (editAction == 11 || editAction == 6 || editAction == 13 || editAction == 17)
+                if (editAction == GetDataHandlers.EditAction.KillWire2 || editAction == GetDataHandlers.EditAction.KillWire || editAction == GetDataHandlers.EditAction.KillWire3 || editAction == GetDataHandlers.EditAction.KillWire4)
                 {
                     if (tileLocation == point1)
                     {
@@ -1236,12 +1236,12 @@ namespace HouseRegions
         private void SendFakeTileWire(TSPlayer player, Point tileLocation)
         {
             var tile = Main.tile[tileLocation.X, tileLocation.Y];
-            if (tile.WireBlue)
+            if (tile.Wire2())
                 return;
 
-            tile.WireBlue = true;
+            tile.Wire2(true);
             player.SendTileSquareCentered(tileLocation.X, tileLocation.Y, 1);
-            tile.WireBlue = false;
+            tile.Wire2(false);
         }
 
         private void SendAreaDottedFakeWiresTimed(TSPlayer player, Rectangle area, int timeMs)
@@ -1309,7 +1309,7 @@ namespace HouseRegions
             }
         }
 
-        public bool HandleTileEdit(TSPlayer player, byte editAction, ushort tileType, Point location, short style)
+        public bool HandleTileEdit(TSPlayer player, GetDataHandlers.EditAction editAction, short editData, Point location, short style)
         {
             if (!_activeInteractions.TryGetValue(player.Index, out var interaction))
                 return false;
@@ -1321,7 +1321,7 @@ namespace HouseRegions
                 return false;
             }
 
-            var result = interaction.TileEditCallback?.Invoke(player, editAction, tileType, location, style);
+            var result = interaction.TileEditCallback?.Invoke(player, editAction, editData, location, style);
             if (result?.IsHandled == true)
             {
                 if (result.IsInteractionCompleted)
@@ -1355,7 +1355,7 @@ namespace HouseRegions
             public DateTime StartTime { get; private set; }
             public TimeSpan Timeout { get; }
 
-            public Func<TSPlayer, byte, ushort, Point, short, CommandInteractionResult>? TileEditCallback { get; set; }
+            public Func<TSPlayer, GetDataHandlers.EditAction, short, Point, short, CommandInteractionResult>? TileEditCallback { get; set; }
             public Action<TSPlayer>? TimeExpiredCallback { get; set; }
             public Action<TSPlayer>? AbortedCallback { get; set; }
 
