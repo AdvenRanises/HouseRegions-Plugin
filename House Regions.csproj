@@ -34,6 +34,10 @@
       <HintPath>libs\TShockAPI.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="ModFramework" Condition="Exists('libs\ModFramework.dll')">
+      <HintPath>libs\ModFramework.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
 </Project>
