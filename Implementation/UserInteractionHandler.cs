@@ -1236,12 +1236,12 @@ namespace HouseRegions
         private void SendFakeTileWire(TSPlayer player, Point tileLocation)
         {
             var tile = Main.tile[tileLocation.X, tileLocation.Y];
-            if (tile.wire2)
+            if (tile.wire2())
                 return;
 
-            tile.wire2 = true;
+            tile.wire2(true);
             player.SendTileSquareCentered(tileLocation.X, tileLocation.Y, 1);
-            tile.wire2 = false;
+            tile.wire2(false);
         }
 
         private void SendAreaDottedFakeWiresTimed(TSPlayer player, Rectangle area, int timeMs)
