@@ -104,7 +104,7 @@ namespace HouseRegions
             if (_isDisposed || !_hooksEnabled || e.Handled || _userInteractionHandler == null)
                 return;
 
-            e.Handled = _userInteractionHandler.HandleTileEdit(e.Player, e.Action, e.TileType, new Point(e.X, e.Y), e.Style);
+            e.Handled = _userInteractionHandler.HandleTileEdit(e.Player, e.Action, e.EditData, new Point(e.X, e.Y), e.Style);
         }
 
         protected override void Dispose(bool disposing)
